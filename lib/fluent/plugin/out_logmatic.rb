@@ -1,5 +1,4 @@
 require 'socket'
-require 'yaml'
 require 'openssl'
 
 class Fluent::LogmaticOutput < Fluent::BufferedOutput
@@ -12,7 +11,7 @@ class Fluent::LogmaticOutput < Fluent::BufferedOutput
   config_param :use_json,       :bool,    :default => true
 
   # Connection settings
-  config_param :host,           :string,    :default => 'api.logmatic.io'
+  config_param :host,           :string,  :default => 'api.logmatic.io'
   config_param :use_ssl,        :bool,    :default => true
   config_param :port,           :integer, :default => 10514
   config_param :ssl_port,       :integer, :default => 10515
@@ -20,7 +19,6 @@ class Fluent::LogmaticOutput < Fluent::BufferedOutput
   
   # API Settings
   config_param :api_key,  :string
-
   
   def configure(conf)
     super
@@ -37,14 +35,20 @@ class Fluent::LogmaticOutput < Fluent::BufferedOutput
 
   def client
 
-   @_socket ||= if @use_ssl
-      context    = OpenSSL::SSL::SSLContext.new
-      socket     = TCPSocket.new @host, @ssl_port
-      ssl_client = OpenSSL::SSL::SSLSocket.new socket, context
-      ssl_client.connect
-    else
-      TCPSocket.new @host, @port
+   if not @_socket
+   
+     if @use_ssl
+        context    = OpenSSL::SSL::SSLContext.new
+        socket     = TCPSocket.new @host, @ssl_port
+        ssl_client = OpenSSL::SSL::SSLSocket.new socket, context
+        ssl_client.connect
+      else
+        TCPSocket.new @host, @port
+      end
+      
     end
+    
+    return @_socket
 
   end
 
@@ -80,12 +84,12 @@ class Fluent::LogmaticOutput < Fluent::BufferedOutput
       if retries < @max_retries
         retries += 1
         @_socket = nil
-        log.warn "Could not push logs to Logmatic API, resetting connection and trying again. #{e.message}"
         a_couple_of_seconds = 5**retries 
+        log.warn "Could not push logs to Logmatic, attempt=#{retries} max_attempts=#{max_retries} wait=#{a_couple_of_seconds}s error=#{e.message}"
         sleep a_couple_of_seconds
         retry
       end
-      raise ConnectionFailure, "Could not push logs to Logmatic, attempt=#{retries} max_attempts=#{max_retries} wait=#{a_couple_of_seconds}s error=#{e.message}"
+      raise ConnectionFailure, "Could not push logs to Logmatic after #{retries} retries, #{e.message}"
     end
   end
 
