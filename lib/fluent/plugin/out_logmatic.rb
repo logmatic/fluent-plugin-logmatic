@@ -35,21 +35,15 @@ class Fluent::LogmaticOutput < Fluent::BufferedOutput
 
   def client
 
-   if not @_socket
-   
-     if @use_ssl
-        context    = OpenSSL::SSL::SSLContext.new
-        socket     = TCPSocket.new @host, @ssl_port
-        ssl_client = OpenSSL::SSL::SSLSocket.new socket, context
-        ssl_client.connect
-      else
-        TCPSocket.new @host, @port
-      end
-      
+   @_socket ||= if @use_ssl
+      context    = OpenSSL::SSL::SSLContext.new
+      socket     = TCPSocket.new @host, @ssl_port
+      ssl_client = OpenSSL::SSL::SSLSocket.new socket, context
+      ssl_client.connect
+    else
+      TCPSocket.new @host, @port
     end
     
-    return @_socket
-
   end
 
   # This method is called when an event reaches Fluentd.
