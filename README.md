@@ -17,10 +17,10 @@ To add the plugin to your fluentd agent, use the following command:
 Usage
 =====
 
-"match" Tell fluentd how to send to Logmatic.io
+Configure the output plugin
 --------------------------
 
-To match events tagged logmatic, simply add the following code to your configuration file.
+To match events and send them to logmatic.io, simply add the following code to your configuration file.
 
 ```xml
 # Match events tagged with "logmatic.**" and
@@ -36,7 +36,10 @@ To match events tagged logmatic, simply add the following code to your configura
 
 ```
 
-Once this setup is done, any child events tagged with `logmatic` will be ship to your plateform.
+After a restart of FluentD, any child events tagged with `logmatic` are shipped to your plateform.
+
+Validation
+-------------------------
 
 Let's make a simple test.
 
@@ -44,7 +47,7 @@ Let's make a simple test.
 echo '{"message":"hello world from fluentd"}' | fluent-cat logmatic.demo
 ```
 
-This will produce the following event:
+Produces the following event:
 
 ```javascript
 { 
@@ -62,19 +65,20 @@ As fluent-plugin-logmatic is an output_buffer, you can set all output_buffer pro
 
 api_key
 --------
-This parameter is required in order to authenticate your fluent agent. The agent won't started until set your key.    
+This parameter is required in order to authenticate your fluent agent.
 
 use_json 
 --------
-If it's set to true, the event will be send to json format. If it's set to false, only the key `message` of the record will be sent to Logmatic.io. Set to true by default.
+True by default, the event is sent in json format. Othwerwise, in plain text.
 
 use_ssl
 --------
-If it's set to true, the agent initialize a secure connection to Logmatic. Set to true by default. 
 
+True by default, the agent initializes a secure connection to Logmatic.io. In clear TCP otherwise.
 
 max_retries
 --------
-The number of retries before raised an error. By default, this parameter is set to 3.
+
+3 by default, number of retries before the output plugin stops.
 
 
