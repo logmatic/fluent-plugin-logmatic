@@ -51,8 +51,8 @@ Produces the following event:
 
 ```javascript
 { 
-	"custom": {
-    	"message": "hello world from fluentd" 
+    "custom": {
+        "message": "hello world from fluentd"
      }
 }
 ```
@@ -63,22 +63,10 @@ Let's go deeper on the plugin configuration.
 
 As fluent-plugin-logmatic is an output_buffer, you can set all output_buffer properties like it's describe in the [fluentd documentation](http://docs.fluentd.org/articles/output-plugin-overview#buffered-output-parameters "documentation").
 
-api_key
---------
-This parameter is required in order to authenticate your fluent agent.
 
-use_json 
---------
-True by default, the event is sent in json format. Othwerwise, in plain text.
-
-use_ssl
---------
-
-True by default, the agent initializes a secure connection to Logmatic.io. In clear TCP otherwise.
-
-max_retries
---------
-
-3 by default, number of retries before the output plugin stops.
-
-
+|  Property   |  Description                                                             |  Default value |
+|-------------|--------------------------------------------------------------------------|----------------|
+| **api_key** | This parameter is required in order to authenticateyour fluent agent.   | nil            |
+| **use_json**| Event format, if true, the event is sent in json format. Othwerwise, in plain text. | true      |
+| **use_ssl** | If true, the agent initializes a secure connection to Logmatic.io. In clear TCP otherwise. | true |
+|**max_retries**| The number of retries before the output plugin stops. | 3 |
