@@ -6,7 +6,6 @@ class Fluent::LogmaticOutput < Fluent::BufferedOutput
 
   # Register the plugin
   Fluent::Plugin.register_output('logmatic', self)
-
   # Output settings
   config_param :use_json,       :bool,    :default => true
 
@@ -20,9 +19,17 @@ class Fluent::LogmaticOutput < Fluent::BufferedOutput
   # API Settings
   config_param :api_key,  :string
   
+  def initialize
+    super
+  end
+
+  # Define `log` method for v0.10.42 or earlier
+  unless method_defined?(:log)
+    define_method("log") { $log }
+  end
+
   def configure(conf)
     super
-    @last_edit = Time.at(0)
   end
 
   def start
@@ -43,7 +50,15 @@ class Fluent::LogmaticOutput < Fluent::BufferedOutput
     else
       TCPSocket.new @host, @port
     end
-    
+
+    # After 50s of inactivity, send 10 keepalive signal
+    @_socket.setsockopt(Socket::SOL_SOCKET, Socket::SO_KEEPALIVE, true)
+    @_socket.setsockopt(Socket::SOL_TCP, Socket::TCP_KEEPIDLE, 50)
+    @_socket.setsockopt(Socket::SOL_TCP, Socket::TCP_KEEPINTVL, 10)
+    @_socket.setsockopt(Socket::SOL_TCP, Socket::TCP_KEEPCNT, 5)
+
+    return @_socket
+
   end
 
   # This method is called when an event reaches Fluentd.
@@ -54,13 +69,18 @@ class Fluent::LogmaticOutput < Fluent::BufferedOutput
   # NOTE! This method is called by internal thread, not Fluentd's main thread.
   # 'chunk' is a buffer chunk that includes multiple formatted events.
   def write(chunk)
-    
+
+    messages = Array.new
     chunk.msgpack_each do |tag, record|
       next unless record.is_a? Hash
       next unless @use_json or record.has_key? "message"
-      message = @use_json ? record.to_json : record["message"].rstrip()
-      send_to_logmatic(message)
+      if @use_json
+        messages.push "#{api_key} " + record.to_json + "\n"
+      else
+        messages.push "#{api_key} " + record["message"].rstrip() + "\n"
+      end
     end
+    send_to_logmatic(messages)
 
   end
 
@@ -70,7 +90,13 @@ class Fluent::LogmaticOutput < Fluent::BufferedOutput
 
     begin
 
-      client.write("#{api_key} #{data}\n")
+      # Check the connectivity and write messages
+      client.read(0)
+
+
+      log.trace("Send nb_event=#{data.size} events to Logmatic")
+      client.write(data.join("\n") + "\n") unless data.empty?
+
 
     # Handle some failures
     rescue Errno::ECONNREFUSED, Errno::ETIMEDOUT, Errno::EPIPE => e
@@ -78,7 +104,7 @@ class Fluent::LogmaticOutput < Fluent::BufferedOutput
       if retries < @max_retries
         retries += 1
         @_socket = nil
-        a_couple_of_seconds = 5**retries 
+        a_couple_of_seconds = retries ** 2
         log.warn "Could not push logs to Logmatic, attempt=#{retries} max_attempts=#{max_retries} wait=#{a_couple_of_seconds}s error=#{e.message}"
         sleep a_couple_of_seconds
         retry
