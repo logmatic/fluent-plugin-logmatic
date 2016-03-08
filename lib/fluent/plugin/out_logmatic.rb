@@ -95,7 +95,7 @@ class Fluent::LogmaticOutput < Fluent::BufferedOutput
       #log.trace  "Connected=#{connected},#{x}"
       #raise Errno::ECONNREFUSED, "Client has lost server connection" if connected == 0
       log.trace "New attempt to Logmatic attempt=#{retries}" if retries > 0
-      log.trace("Send nb_event=#{data.size} events to Logmatic")
+      log.trace "Send nb_event=#{data.size} events to Logmatic"
       data.each do |event|
         client.write(event)
       end
