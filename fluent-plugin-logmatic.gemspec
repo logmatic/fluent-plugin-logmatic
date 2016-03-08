@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Logmatic support team"]
   spec.email         = ["support@logmatic.io"]
   spec.summary       = "Logmatic output plugin for Fluent event collector"
-  spec.homepage      = "https://github.com/logmatic/fluent-plugin-logmatic"
+  spec.homepage      = "http://logmatic.io"
   spec.license       = "MIT"
 
   spec.files         = [".gitignore", "Gemfile", "LICENSE", "README.md", "Rakefile", "fluent-plugin-logmatic.gemspec", "lib/fluent/plugin/out_logmatic.rb"]
