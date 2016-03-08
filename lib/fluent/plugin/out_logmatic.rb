@@ -14,7 +14,7 @@ class Fluent::LogmaticOutput < Fluent::BufferedOutput
   config_param :use_ssl,        :bool,    :default => true
   config_param :port,           :integer, :default => 10514
   config_param :ssl_port,       :integer, :default => 10515
-  config_param :max_retries,    :integer, :default => 3
+  config_param :max_retries,    :integer, :default => -1
   
   # API Settings
   config_param :api_key,  :string
@@ -51,11 +51,10 @@ class Fluent::LogmaticOutput < Fluent::BufferedOutput
       TCPSocket.new @host, @port
     end
 
-    # After 50s of inactivity, send 10 keepalive signal
     @_socket.setsockopt(Socket::SOL_SOCKET, Socket::SO_KEEPALIVE, true)
-    @_socket.setsockopt(Socket::SOL_TCP, Socket::TCP_KEEPIDLE, 50)
-    @_socket.setsockopt(Socket::SOL_TCP, Socket::TCP_KEEPINTVL, 10)
-    @_socket.setsockopt(Socket::SOL_TCP, Socket::TCP_KEEPCNT, 5)
+    @_socket.setsockopt(Socket::SOL_TCP, Socket::TCP_KEEPIDLE, 10)
+    @_socket.setsockopt(Socket::SOL_TCP, Socket::TCP_KEEPINTVL, 3)
+    @_socket.setsockopt(Socket::SOL_TCP, Socket::TCP_KEEPCNT, 3)
 
     return @_socket
 
@@ -86,25 +85,31 @@ class Fluent::LogmaticOutput < Fluent::BufferedOutput
 
   def send_to_logmatic(data)
 
+
     retries = 0
+    log.trace "trace xxxxx #{retries}"
 
     begin
 
       # Check the connectivity and write messages
-      client.read(0)
-
-
+      #connected,x = client.recv(0)
+      #log.trace  "Connected=#{connected},#{x}"
+      #raise Errno::ECONNREFUSED, "Client has lost server connection" if connected == 0
+      log.trace "New attempt to Logmatic" if retries > 0
       log.trace("Send nb_event=#{data.size} events to Logmatic")
-      client.write(data.join("\n") + "\n") unless data.empty?
+      data.each do |event|
+        client.write(event)
+      end
 
 
     # Handle some failures
-    rescue Errno::ECONNREFUSED, Errno::ETIMEDOUT, Errno::EPIPE => e
+    rescue Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Errno::ETIMEDOUT, Errno::EPIPE => e
 
-      if retries < @max_retries
-        retries += 1
+      if retries < @max_retries || max_retries == -1
         @_socket = nil
         a_couple_of_seconds = retries ** 2
+        a_couple_of_seconds = 30 unless a_couple_of_seconds < 30
+        retries += 1
         log.warn "Could not push logs to Logmatic, attempt=#{retries} max_attempts=#{max_retries} wait=#{a_couple_of_seconds}s error=#{e.message}"
         sleep a_couple_of_seconds
         retry
