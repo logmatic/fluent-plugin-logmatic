@@ -4,7 +4,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 Gem::Specification.new do |spec|
   spec.name          = "fluent-plugin-logmatic"
-  spec.version       = "0.8"
+  spec.version       = "0.8.1"
   spec.authors       = ["Logmatic support team"]
   spec.email         = ["support@logmatic.io"]
   spec.summary       = "Logmatic output plugin for Fluent event collector"
