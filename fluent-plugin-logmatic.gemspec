@@ -4,14 +4,14 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 Gem::Specification.new do |spec|
   spec.name          = "fluent-plugin-logmatic"
-  spec.version       = "0.7"
+  spec.version       = "0.8"
   spec.authors       = ["Logmatic support team"]
   spec.email         = ["support@logmatic.io"]
   spec.summary       = "Logmatic output plugin for Fluent event collector"
-  spec.homepage      = "https://github.com/logmatic/fluent-plugin-logmatic"
+  spec.homepage      = "http://logmatic.io"
   spec.license       = "MIT"
 
-  spec.files         = `git ls-files -z`.split("\x0")
+  spec.files         = [".gitignore", "Gemfile", "LICENSE", "README.md", "Rakefile", "fluent-plugin-logmatic.gemspec", "lib/fluent/plugin/out_logmatic.rb"]
   spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ["lib"]
