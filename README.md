@@ -1,6 +1,6 @@
-# fluent-plugin-logmatic
+# Fluentd output plugin for Logmatic.io.
+Link to the [Logmatic.io documentation](http://doc.logmatic.io/docs/using-fluentd)*
 
-Fluentd output plugin for Logmatic.io.
 
 It mainly contains a proper JSON formatter and a socket handler that
 streams logs directly to Logmatic.io - so no need to use a log shipper
