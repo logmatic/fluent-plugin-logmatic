@@ -61,5 +61,6 @@ As fluent-plugin-logmatic is an output_buffer, you can set all output_buffer pro
 |-------------|--------------------------------------------------------------------------|----------------|
 | **api_key** | This parameter is required in order to authenticate your fluent agent.   | nil            |
 | **use_json**| Event format, if true, the event is sent in json format. Othwerwise, in plain text. | true      |
+| **include_tag_key**| Automatically include tags in the record. | false      |
 | **use_ssl** | If true, the agent initializes a secure connection to Logmatic.io. In clear TCP otherwise. | true |
 |**max_retries**| The number of retries before the output plugin stops. Set to -1 for unlimited retries | -1 |
