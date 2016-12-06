@@ -25,6 +25,10 @@ To match events and send them to logmatic.io, simply add the following code to y
   @type logmatic
   @id awesome_agent
   
+  # Optional
+  @include_tag_key true
+  @tag_key 'tag'
+  
   api_key <your_api_key>
 
 
