@@ -8,6 +8,8 @@ class Fluent::LogmaticOutput < Fluent::BufferedOutput
   Fluent::Plugin.register_output('logmatic', self)
   # Output settings
   config_param :use_json,       :bool,    :default => true
+  config_param :include_tag_key,:bool,    :default => false
+  config_param :tag_key,        :string,  :default => 'tag'
 
   # Connection settings
   config_param :host,           :string,  :default => 'api.logmatic.io'
@@ -15,10 +17,11 @@ class Fluent::LogmaticOutput < Fluent::BufferedOutput
   config_param :port,           :integer, :default => 10514
   config_param :ssl_port,       :integer, :default => 10515
   config_param :max_retries,    :integer, :default => -1
-  
+
+
   # API Settings
   config_param :api_key,  :string
-  
+
   def initialize
     super
   end
@@ -73,6 +76,9 @@ class Fluent::LogmaticOutput < Fluent::BufferedOutput
     chunk.msgpack_each do |tag, record|
       next unless record.is_a? Hash
       next unless @use_json or record.has_key? "message"
+      if @include_tag_key
+        record[@tag_key] = tag
+      end
       if @use_json
         messages.push "#{api_key} " + record.to_json + "\n"
       else
