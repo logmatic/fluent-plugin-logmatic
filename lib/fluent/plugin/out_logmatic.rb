@@ -9,6 +9,7 @@ class Fluent::LogmaticOutput < Fluent::BufferedOutput
   # Output settings
   config_param :use_json,       :bool,    :default => true
   config_param :include_tag_key,:bool,    :default => false
+  config_param :tag_key,        :string,  :default => 'tag'
 
   # Connection settings
   config_param :host,           :string,  :default => 'api.logmatic.io'
