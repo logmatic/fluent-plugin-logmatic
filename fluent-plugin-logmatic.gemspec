@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
   spec.homepage      = "http://logmatic.io"
   spec.license       = "MIT"
 
-  spec.files         = [".gitignore", "Gemfile", "LICENSE", "README.md", "Rakefile", "fluent-plugin-logmatic.gemspec", "lib/fluent/plugin/out_logmatic.rb"]
+  spec.files         = [".gitignore", "Gemfile", "LICENSE", "README.md", "Rakefile", "fluent-plugin-logmatic.gemspec", "lib/fluent/plugin/out_logmatic.rb", "lib/fluent/plugin/out_logmatic_http.rb"]
   spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ["lib"]
