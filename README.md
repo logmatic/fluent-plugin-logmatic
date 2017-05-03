@@ -1,5 +1,5 @@
 # Fluentd output plugin for Logmatic.io.
-Link to the [Logmatic.io documentation](http://doc.logmatic.io/docs/using-fluentd)*
+Link to the [Logmatic.io documentation](http://doc.logmatic.io/docs/using-fluentd)
 
 
 It mainly contains a proper JSON formatter and a socket handler that
@@ -17,12 +17,30 @@ To add the plugin to your fluentd agent, use the following command:
 
 To match events and send them to logmatic.io, simply add the following code to your configuration file.
 
+TCP example
 ```xml
 # Match events tagged with "logmatic.**" and
 # send them to Logmatic.io
 <match logmatic.**>
 
   @type logmatic
+  @id awesome_agent
+  api_key <your_api_key>
+
+  # Optional
+  include_tag_key true
+  tag_key 'tag'
+  
+</match>
+
+```
+HTTP example
+```xml
+# Match events tagged with "logmatic.**" and
+# send them to Logmatic.io
+<match logmatic.**>
+
+  @type logmatic_http
   @id awesome_agent
   api_key <your_api_key>
 
