@@ -26,12 +26,12 @@ class Fluent::LogmaticOutput < Fluent::BufferedOutput
   end
 
   def configure(conf)
-    super
+    super(conf)
     # Http client
     @uri = URI.parse(@endpoint + @api_key)
     @https = Net::HTTP.new(@uri.host, @uri.port)
     @https.use_ssl = true
-    log.trace("URI=" + @uri.to_s)
+    log.trace("Setting new connection to https://#{@uri.host}:#{@uri.port}")
   end
 
   def start
@@ -54,6 +54,7 @@ class Fluent::LogmaticOutput < Fluent::BufferedOutput
 
     messages = Array.new
 
+    # Pack messages
     chunk.msgpack_each do |tag, record|
       next unless record.is_a? Hash
       next unless @use_json or record.has_key? "message"
@@ -64,11 +65,37 @@ class Fluent::LogmaticOutput < Fluent::BufferedOutput
       messages.push record.to_json
     end
 
-    req = Net::HTTP::Post.new(@uri.path)
-    req['Content-Type'] = 'application/json'
-    req.body = messages.to_json
-    res = @https.request(req)
+    # Send them
+    log.trace("Sending #{messages.length} messages")
+    retries = 0
+    begin
 
+      req = Net::HTTP::Post.new(@uri.path)
+      req['Content-Type'] = 'application/json'
+      req.body = data
+      log.trace("Posting data")
+      res = @https.request(messages.to_json)
+      log.trace("Status code: #{res.code}")
+
+      if (res.code != 0 && res.code != 400)
+        if retries < @max_retries || max_retries == -1
+
+          a_couple_of_seconds = retries ** 2
+          a_couple_of_seconds = 30 unless a_couple_of_seconds < 30
+          retries += 1
+          log.warn "Could not push logs to Logmatic, attempt=#{retries} max_attempts=#{max_retries} wait=#{a_couple_of_seconds}s error=#{res.code}"
+
+          sleep a_couple_of_seconds
+
+          raise "Status code: #{res.code}"
+
+        end
+      end
+    rescue => e
+      # Handle some failures
+      retry
+      raise ConnectionFailure, "Could not push logs to Logmatic after #{retries} retries, #{e.message}"
+    end
   end
 
 end
