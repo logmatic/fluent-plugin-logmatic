@@ -76,7 +76,8 @@ class Fluent::LogmaticOutput < Fluent::BufferedOutput
     messages = Array.new
     chunk.msgpack_each do |tag, record|
       next unless record.is_a? Hash
-      next unless @use_json or record.has_key? "message"
+      next unless record.has_key? "message"
+
       if @include_tag_key
         record[@tag_key] = tag
       end
