@@ -1,5 +1,6 @@
 require 'socket'
 require 'openssl'
+require 'yajl'
 
 class Fluent::LogmaticOutput < Fluent::BufferedOutput
   class ConnectionFailure < StandardError; end
@@ -75,12 +76,13 @@ class Fluent::LogmaticOutput < Fluent::BufferedOutput
     messages = Array.new
     chunk.msgpack_each do |tag, record|
       next unless record.is_a? Hash
-      next unless @use_json or record.has_key? "message"
+      next unless record.has_key? "message"
+
       if @include_tag_key
         record[@tag_key] = tag
       end
       if @use_json
-        messages.push "#{api_key} " + record.to_json + "\n"
+        messages.push "#{api_key} " + Yajl.dump(record) + "\n"
       else
         messages.push "#{api_key} " + record["message"].rstrip() + "\n"
       end

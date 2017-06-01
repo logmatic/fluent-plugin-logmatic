@@ -4,7 +4,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 Gem::Specification.new do |spec|
   spec.name          = "fluent-plugin-logmatic"
-  spec.version       = "0.9.0"
+  spec.version       = "0.9.1"
   spec.authors       = ["Logmatic support team"]
   spec.email         = ["support@logmatic.io"]
   spec.summary       = "Logmatic output plugin for Fluent event collector"
@@ -18,4 +18,5 @@ Gem::Specification.new do |spec|
 
   spec.add_development_dependency "bundler", "~> 1.5"
   spec.add_development_dependency "rake"
+  spec.add_development_dependency "yajl-ruby", "~> 1.2"
 end

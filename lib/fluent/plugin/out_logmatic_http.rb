@@ -1,3 +1,8 @@
+require 'net/http'
+require 'net/https'
+require 'uri'
+require 'yajl'
+
 class Fluent::LogmaticOutput < Fluent::BufferedOutput
   class ConnectionFailure < StandardError;
   end
@@ -20,9 +25,6 @@ class Fluent::LogmaticOutput < Fluent::BufferedOutput
 
   def initialize
     super
-    require 'net/http'
-    require 'net/https'
-    require 'uri'
   end
 
   def configure(conf)
@@ -56,45 +58,58 @@ class Fluent::LogmaticOutput < Fluent::BufferedOutput
 
     # Pack messages
     chunk.msgpack_each do |tag, record|
+
+      log.trace("New chunk received: #{record}, #{tag}")
       next unless record.is_a? Hash
-      next unless @use_json or record.has_key? "message"
+      next unless record.has_key? "message"
+
 
       if @include_tag_key
         record[@tag_key] = tag
       end
-      messages.push record.to_json
+
+      log.trace("Json message: #{Yajl.dump(record)}")
+      messages.push Yajl.dump(record)
     end
 
     # Send them
     log.trace("Sending #{messages.length} messages")
     retries = 0
-    begin
+    force_retry = false
 
-      req = Net::HTTP::Post.new(@uri.path)
-      req['Content-Type'] = 'application/json'
-      req.body = data
-      log.trace("Posting data")
-      res = @https.request(messages.to_json)
-      log.trace("Status code: #{res.code}")
+    if (messages.length > 0)
 
-      if (res.code != 0 && res.code != 400)
-        if retries < @max_retries || max_retries == -1
+      log.trace("Full message body: #{Yajl.dump(messages)}")
+      begin
 
-          a_couple_of_seconds = retries ** 2
-          a_couple_of_seconds = 30 unless a_couple_of_seconds < 30
-          retries += 1
-          log.warn "Could not push logs to Logmatic, attempt=#{retries} max_attempts=#{max_retries} wait=#{a_couple_of_seconds}s error=#{res.code}"
+        force_retry = false
+        req = Net::HTTP::Post.new(@uri.path)
+        req['Content-Type'] = 'application/json'
+        req.body = Yajl.dump(messages)
+        log.trace("Posting data")
+        res = @https.request(req)
+        log.trace("Status code: #{res.code}")
 
-          sleep a_couple_of_seconds
+        if (res.code.to_i != 0 && res.code.to_i != 200)
+          if retries < @max_retries || max_retries == -1
 
-          raise "Status code: #{res.code}"
+            a_couple_of_seconds = retries ** 2
+            a_couple_of_seconds = 30 unless a_couple_of_seconds < 30
+            retries += 1
+            log.warn "Could not push logs to Logmatic, attempt=#{retries} max_attempts=#{max_retries} wait=#{a_couple_of_seconds}s error=#{res.code}"
 
+            sleep a_couple_of_seconds
+            force_retry = true
+            raise "Status code: #{res.code}"
+
+          end
         end
+      rescue => e
+        # Handle some failures
+        log.error("Error while sending data. Making a new attempt. Error: #{e}")
+        retry if force_retry
+        raise ConnectionFailure, "Could not push logs to Logmatic after #{retries} retries, #{e.message}"
       end
-    rescue => e
-      # Handle some failures
-      retry
-      raise ConnectionFailure, "Could not push logs to Logmatic after #{retries} retries, #{e.message}"
     end
   end
 
