@@ -1,5 +1,6 @@
 require 'socket'
 require 'openssl'
+require 'yajl'
 
 class Fluent::LogmaticOutput < Fluent::BufferedOutput
   class ConnectionFailure < StandardError; end
@@ -80,7 +81,7 @@ class Fluent::LogmaticOutput < Fluent::BufferedOutput
         record[@tag_key] = tag
       end
       if @use_json
-        messages.push "#{api_key} " + record.to_json + "\n"
+        messages.push "#{api_key} " + Yajl.dump(record) + "\n"
       else
         messages.push "#{api_key} " + record["message"].rstrip() + "\n"
       end

@@ -1,3 +1,8 @@
+require 'net/http'
+require 'net/https'
+require 'uri'
+require 'yajl' 
+
 class Fluent::LogmaticOutput < Fluent::BufferedOutput
   class ConnectionFailure < StandardError;
   end
@@ -20,9 +25,6 @@ class Fluent::LogmaticOutput < Fluent::BufferedOutput
 
   def initialize
     super
-    require 'net/http'
-    require 'net/https'
-    require 'uri'
   end
 
   def configure(conf)
@@ -62,7 +64,7 @@ class Fluent::LogmaticOutput < Fluent::BufferedOutput
       if @include_tag_key
         record[@tag_key] = tag
       end
-      messages.push record.to_json
+      messages.push Yajl.dump(record)
     end
 
     # Send them
