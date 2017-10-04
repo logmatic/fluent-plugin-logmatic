@@ -56,9 +56,16 @@ class Fluent::LogmaticOutput < Fluent::BufferedOutput
     end
 
     @_socket.setsockopt(Socket::SOL_SOCKET, Socket::SO_KEEPALIVE, true)
-    @_socket.setsockopt(Socket::SOL_TCP, Socket::TCP_KEEPIDLE, 10)
-    @_socket.setsockopt(Socket::SOL_TCP, Socket::TCP_KEEPINTVL, 3)
-    @_socket.setsockopt(Socket::SOL_TCP, Socket::TCP_KEEPCNT, 3)
+
+    begin
+         @_socket.setsockopt(Socket::SOL_TCP, Socket::TCP_KEEPIDLE, 10)
+         @_socket.setsockopt(Socket::SOL_TCP, Socket::TCP_KEEPINTVL, 3)
+         @_socket.setsockopt(Socket::SOL_TCP, Socket::TCP_KEEPCNT, 3)
+    rescue
+         # JRuby defines SOL_TCP, but it doesn't work
+         @_socket.setsockopt(Socket::IPPROTO_TCP, Socket::TCP_KEEPINTVL, 3)
+         @_socket.setsockopt(Socket::IPPROTO_TCP, Socket::TCP_KEEPCNT, 3)
+    end
 
     return @_socket
 
