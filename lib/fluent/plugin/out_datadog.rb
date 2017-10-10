@@ -100,9 +100,11 @@ class Fluent::DatadogOutput < Fluent::BufferedOutput
   # 'chunk' is a buffer chunk that includes multiple formatted events.
   def write(chunk)
     messages = Array.new
+    log.trace "Datadog plugin: received chunck: #{chunk}"
     chunk.msgpack_each do |tag, record|
       next unless record.is_a? Hash
-      next unless record.has_key? "message"
+
+      log.trace "Datadog plugin: received record: #{record}"
 
       if @include_tag_key
         record[@tag_key] = tag
@@ -110,6 +112,7 @@ class Fluent::DatadogOutput < Fluent::BufferedOutput
       if @use_json
         messages.push "#{api_key} " + Yajl.dump(record) + "\n"
       else
+        next unless record.has_key? "message"
         messages.push "#{api_key} " + record["message"].rstrip() + "\n"
       end
     end
@@ -128,6 +131,7 @@ class Fluent::DatadogOutput < Fluent::BufferedOutput
 
         retries = retries + 1
         data.each do |event|
+          log.trace "Datadog plugin: about to send event=#{event}"
           client.write(event)
         end
 
